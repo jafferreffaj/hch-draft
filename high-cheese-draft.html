@@ -2,477 +2,300 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>High Cheese Hoser — Draft Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>HCH Draft</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500&display=swap');
+:root {
+  --bg:#0e0f11;--bg2:#161820;--bg3:#1e2028;--bg4:#252830;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#f0f0f0;--muted:#888;--dim:#444;
+  --green:#39d98a;--green-bg:rgba(57,217,138,0.12);--green-border:rgba(57,217,138,0.3);
+  --amber:#f0b429;--amber-bg:rgba(240,180,41,0.12);--amber-border:rgba(240,180,41,0.3);
+  --red:#f56565;--red-bg:rgba(245,101,101,0.12);--red-border:rgba(245,101,101,0.3);
+  --blue:#63b3ed;--blue-bg:rgba(99,179,237,0.12);
+  --purple:#b794f4;--purple-bg:rgba(183,148,244,0.12);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;height:100%;overflow:hidden}
 
-  :root {
-    --bg: #0e0f11;
-    --bg2: #161820;
-    --bg3: #1e2028;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #f0f0f0;
-    --muted: #888;
-    --dim: #555;
-    --green: #39d98a;
-    --green-bg: rgba(57,217,138,0.1);
-    --amber: #f0b429;
-    --amber-bg: rgba(240,180,41,0.1);
-    --red: #f56565;
-    --red-bg: rgba(245,101,101,0.1);
-    --blue: #63b3ed;
-    --blue-bg: rgba(99,179,237,0.1);
-    --purple: #b794f4;
-    --purple-bg: rgba(183,148,244,0.1);
-    --accent: #39d98a;
-  }
+/* LAYOUT */
+.app{display:flex;flex-direction:column;height:100dvh;height:100vh}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bg); }
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10}
+.hdr-left{display:flex;flex-direction:column;gap:1px}
+.hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}
+.hdr-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.04em}
+.pick-badge{background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:6px 12px;text-align:center;min-width:56px}
+.pick-num{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--green);line-height:1}
+.pick-label{font-size:9px;color:var(--green);opacity:.7;letter-spacing:.06em;text-transform:uppercase}
 
-  body {
-    font-family: 'Barlow', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 14px;
-    padding-bottom: 40px;
-  }
+/* TABS */
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:11px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;user-select:none}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
 
-  /* HEADER */
-  .header {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .header-left { display: flex; flex-direction: column; gap: 2px; }
-  .header-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--green);
-    text-transform: uppercase;
-  }
-  .header-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
-  .pick-counter {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    background: var(--green-bg);
-    color: var(--green);
-    border: 1px solid rgba(57,217,138,0.25);
-    padding: 4px 10px;
-    border-radius: 4px;
-    text-align: center;
-  }
-  .pick-counter strong { font-size: 16px; display: block; }
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;padding-bottom:calc(16px + var(--safe-bottom))}
+.page.active{display:block}
 
-  /* TABS */
-  .main-tabs {
-    display: flex;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 0 20px;
-    gap: 0;
-    overflow-x: auto;
-  }
-  .main-tab {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 11px 16px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-    transition: color .15s, border-color .15s;
-  }
-  .main-tab.active { color: var(--green); border-bottom-color: var(--green); }
+/* SEARCH BAR */
+.search-bar{padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:5}
+.search-input{flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:9px 12px;font-size:16px;font-family:'Barlow',sans-serif;outline:none;-webkit-appearance:none}
+.search-input::placeholder{color:var(--muted)}
+.search-input:focus{border-color:var(--green)}
+.filter-scroll{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;scrollbar-width:none;flex-shrink:0;background:var(--bg2);border-bottom:1px solid var(--border)}
+.filter-scroll::-webkit-scrollbar{display:none}
+.pf{font-family:'DM Mono',monospace;font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);white-space:nowrap;cursor:pointer;transition:all .15s;user-select:none}
+.pf.active{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
 
-  /* PAGE SECTIONS */
-  .page { display: none; padding: 16px 20px; }
-  .page.active { display: block; }
+/* SORT ROW */
+.sort-row{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;scrollbar-width:none;background:var(--bg);border-bottom:1px solid var(--border)}
+.sort-row::-webkit-scrollbar{display:none}
+.sort-btn{font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--dim);white-space:nowrap;cursor:pointer;user-select:none;transition:all .15s}
+.sort-btn.active{color:var(--green);border-color:var(--green-border)}
 
-  /* STATS BAR */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .stat-card {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 12px;
-  }
-  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-  .stat-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--text); }
-  .stat-sub { font-size: 10px; color: var(--dim); margin-top: 2px; }
+/* PLAYER CARDS */
+.player-list{padding:8px 12px;display:flex;flex-direction:column;gap:6px}
 
-  /* ROSTER GRID */
-  .section-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-  .roster-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-  @media (max-width: 480px) { .roster-grid { grid-template-columns: repeat(3, 1fr); } .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-  .slot {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 7px 8px;
-    min-height: 52px;
-    position: relative;
-  }
-  .slot.filled { border-color: rgba(57,217,138,0.2); }
-  .slot-pos { font-size: 9px; font-family: 'DM Mono', monospace; color: var(--dim); margin-bottom: 2px; text-transform: uppercase; }
-  .slot-name { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; }
-  .slot-pts { font-size: 9px; font-family: 'DM Mono', monospace; color: var(--green); margin-top: 2px; }
-  .slot-empty { font-size: 10px; color: var(--dim); font-style: italic; }
-  .slot-rm {
-    position: absolute; top: 4px; right: 5px;
-    font-size: 11px; color: var(--dim); background: none; border: none;
-    cursor: pointer; line-height: 1; padding: 0;
-  }
-  .slot-rm:hover { color: var(--red); }
+.player-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:background .1s,border-color .1s;position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;active:background:var(--bg3)}
+.player-card:active{background:var(--bg3);border-color:var(--border2)}
+.player-card.my-pick{border-color:var(--green-border);background:rgba(57,217,138,0.05);border-left:3px solid var(--green)}
+.player-card.drafted{opacity:.28;pointer-events:none}
+.player-card.need{border-left:3px solid var(--amber)}
 
-  /* ADD PLAYER */
-  .add-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-  select, input[type=text] {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    border-radius: 5px;
-    padding: 8px 10px;
-    font-size: 13px;
-    font-family: 'Barlow', sans-serif;
-    outline: none;
-  }
-  select:focus, input:focus { border-color: var(--green); }
-  .add-select { flex: 1; min-width: 180px; }
-  .btn {
-    padding: 8px 14px;
-    border-radius: 5px;
-    border: 1px solid var(--border2);
-    background: var(--bg3);
-    color: var(--text);
-    font-size: 12px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background .15s, border-color .15s;
-  }
-  .btn:hover { background: var(--bg2); border-color: var(--border2); }
-  .btn-green { background: var(--green-bg); color: var(--green); border-color: rgba(57,217,138,0.3); }
-  .btn-green:hover { background: rgba(57,217,138,0.18); }
-  .btn-red { background: var(--red-bg); color: var(--red); border-color: rgba(245,101,101,0.3); }
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.pos-pill{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:3px 8px;border-radius:5px;flex-shrink:0}
+.pp-SP{background:var(--blue-bg);color:var(--blue)}
+.pp-RP{background:var(--amber-bg);color:var(--amber)}
+.pp-C{background:var(--red-bg);color:var(--red)}
+.pp-1B{background:var(--green-bg);color:var(--green)}
+.pp-2B{background:var(--purple-bg);color:var(--purple)}
+.pp-3B{background:rgba(240,180,41,.08);color:#d4920a}
+.pp-SS{background:rgba(57,217,138,.06);color:#2eb877}
+.pp-OF{background:rgba(99,179,237,.08);color:#5ea8d4}
 
-  /* POSITION FILTER */
-  .pos-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-  .pf {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .pf.active { background: var(--green-bg); color: var(--green); border-color: rgba(57,217,138,0.3); }
+.card-name{font-size:16px;font-weight:500;color:var(--text);flex:1;line-height:1.2}
+.card-adp{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim)}
+.my-tag{font-family:'DM Mono',monospace;font-size:9px;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:4px;letter-spacing:.04em}
+.need-tag{font-family:'DM Mono',monospace;font-size:9px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:4px}
 
-  /* SEARCH + SORT ROW */
-  .search-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
-  .search-row input { width: 160px; }
-  .hide-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
-  .hide-row input[type=checkbox] { accent-color: var(--green); }
+.card-stats{display:flex;gap:0;margin-bottom:8px}
+.stat{flex:1;text-align:center;padding:6px 4px;background:var(--bg3);border-radius:6px;margin:0 2px}
+.stat:first-child{margin-left:0}
+.stat:last-child{margin-right:0}
+.stat-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text);line-height:1}
+.stat-lbl{font-size:9px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
 
-  /* SCORING PILLS */
-  .scoring-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
-  .sp {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 3px;
-    background: var(--bg3);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .sp.pos { color: var(--green); background: var(--green-bg); border-color: rgba(57,217,138,0.2); }
-  .sp.neg { color: var(--red); background: var(--red-bg); border-color: rgba(245,101,101,0.2); }
+.card-bottom{display:flex;align-items:center;justify-content:space-between}
+.pts-bar-wrap{flex:1;margin-right:10px}
+.pts-bar-bg{height:3px;background:var(--bg3);border-radius:2px;margin-top:4px}
+.pts-bar-fill{height:3px;border-radius:2px}
+.pts-info{display:flex;justify-content:space-between;align-items:baseline}
+.pts-num{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--text)}
+.pts-lbl{font-size:9px;color:var(--muted)}
+.delta-pos{font-family:'DM Mono',monospace;font-size:11px;color:var(--green);font-weight:500}
+.delta-neg{font-family:'DM Mono',monospace;font-size:11px;color:var(--red)}
+.delta-fair{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)}
 
-  /* TABLE */
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; border-collapse: collapse; min-width: 560px; }
-  thead tr { border-bottom: 1px solid var(--border2); }
-  th {
-    padding: 7px 8px;
-    text-align: left;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-  }
-  th:hover { color: var(--muted); }
-  th.sorted { color: var(--green); }
-  td { padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 12px; white-space: nowrap; }
-  tr.is-drafted td { opacity: 0.3; }
-  tr.is-drafted td:first-child { opacity: 1; }
-  tr.is-mine td { background: rgba(57,217,138,0.04); }
-  tr.is-need { border-left: 2px solid var(--amber); }
-  tr.is-mine { border-left: 2px solid var(--green); }
+.grade{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:3px 8px;border-radius:5px;flex-shrink:0}
+.g-elite{background:var(--purple-bg);color:var(--purple)}
+.g-great{background:var(--green-bg);color:var(--green)}
+.g-avg{background:var(--amber-bg);color:var(--amber)}
+.g-poor{background:var(--red-bg);color:var(--red)}
 
-  .player-name { font-weight: 500; }
-  .tag {
-    display: inline-block;
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    margin-left: 4px;
-    vertical-align: middle;
-  }
-  .tag-mine { background: var(--green-bg); color: var(--green); }
-  .tag-drafted { background: var(--bg3); color: var(--dim); }
+/* BOTTOM SHEET / ACTION SHEET */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:none;backdrop-filter:blur(2px)}
+.overlay.show{display:block}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border2);border-radius:20px 20px 0 0;z-index:51;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);padding-bottom:calc(16px + var(--safe-bottom))}
+.sheet.show{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--dim);border-radius:2px;margin:12px auto 16px}
+.sheet-player{padding:0 20px 16px;border-bottom:1px solid var(--border)}
+.sheet-name{font-size:20px;font-weight:500;margin-bottom:4px}
+.sheet-meta{display:flex;gap:8px;align-items:center}
+.sheet-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.sheet-stat{text-align:center;background:var(--bg3);border-radius:8px;padding:10px 6px}
+.sheet-stat-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--text)}
+.sheet-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+.sheet-actions{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.sheet-btn{width:100%;padding:16px;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;cursor:pointer;transition:opacity .15s}
+.sheet-btn:active{opacity:.75}
+.btn-draft{background:var(--green);color:#0e0f11}
+.btn-skip{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.btn-undraft{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 
-  .pos-pill {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 500;
-  }
-  .pp-SP { background: var(--blue-bg); color: var(--blue); }
-  .pp-RP { background: var(--amber-bg); color: var(--amber); }
-  .pp-C  { background: var(--red-bg); color: var(--red); }
-  .pp-1B { background: var(--green-bg); color: var(--green); }
-  .pp-2B { background: var(--purple-bg); color: var(--purple); }
-  .pp-3B { background: rgba(240,180,41,0.08); color: #e0a020; }
-  .pp-SS { background: rgba(57,217,138,0.06); color: #2eb877; }
-  .pp-OF { background: rgba(99,179,237,0.08); color: #5ea8d4; }
+/* INSIGHT STRIP */
+.insight-strip{margin:8px 12px 0;background:var(--bg3);border-radius:10px;padding:10px 14px;border-left:3px solid var(--green)}
+.insight-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:4px}
+.insight-row{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:2px}
+.insight-row strong{color:var(--text)}
 
-  .bar-wrap { display: flex; align-items: center; gap: 6px; }
-  .bar-bg { flex: 1; height: 4px; background: var(--bg2); border-radius: 2px; min-width: 40px; }
-  .bar-fill { height: 4px; border-radius: 2px; }
-  .pts-num { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; min-width: 36px; }
-  .ppg-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
+/* ROSTER PAGE */
+.roster-page{padding:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.stat-card{background:var(--bg3);border-radius:10px;padding:12px;border:1px solid var(--border)}
+.sc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.sc-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--text)}
+.sc-sub{font-size:10px;color:var(--dim);margin-top:2px}
+.section-hdr{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
+.pos-balance{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.pos-chip{background:var(--bg3);border-radius:8px;padding:8px 12px;text-align:center;min-width:56px;border:1px solid var(--border)}
+.pos-chip.ok{border-color:var(--green-border)}
+.pos-chip.need{border-color:var(--amber-border)}
+.pos-chip-pos{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:2px}
+.pos-chip.ok .pos-chip-pos{color:var(--green)}
+.pos-chip.need .pos-chip-pos{color:var(--amber)}
+.pos-chip-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;color:var(--text)}
 
-  .delta-pos { color: var(--green); font-family: 'DM Mono', monospace; font-size: 11px; }
-  .delta-neg { color: var(--red); font-family: 'DM Mono', monospace; font-size: 11px; }
-  .delta-fair { color: var(--dim); font-family: 'DM Mono', monospace; font-size: 11px; }
-  .adp-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
+.roster-list{display:flex;flex-direction:column;gap:6px}
+.roster-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.roster-item.empty{opacity:.4}
+.ri-slot{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);width:32px;flex-shrink:0;text-transform:uppercase}
+.ri-name{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+.ri-pts{font-family:'DM Mono',monospace;font-size:12px;color:var(--green)}
+.ri-rm{font-size:18px;color:var(--dim);padding:4px 6px;cursor:pointer;line-height:1}
+.ri-rm:active{color:var(--red)}
+.ri-empty{flex:1;font-size:12px;color:var(--dim);font-style:italic}
 
-  .grade {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 3px;
-  }
-  .g-elite { background: var(--purple-bg); color: var(--purple); }
-  .g-great { background: var(--green-bg); color: var(--green); }
-  .g-avg { background: var(--amber-bg); color: var(--amber); }
-  .g-poor { background: var(--red-bg); color: var(--red); }
-  .need-flag {
-    font-family: 'DM Mono', monospace; font-size: 9px;
-    background: var(--amber-bg); color: var(--amber);
-    padding: 2px 5px; border-radius: 3px;
-  }
+/* SCORING PAGE */
+.scoring-page{padding:12px}
+.score-section{margin-bottom:16px}
+.score-table{width:100%;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.score-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.score-row:last-child{border-bottom:none}
+.score-row:nth-child(even){background:var(--bg3)}
+.score-cat{flex:1;font-size:13px;color:var(--text)}
+.score-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+.score-val.pos{color:var(--green)}
+.score-val.neg{color:var(--red)}
+.league-info{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.li-row{display:flex;padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px}
+.li-row:last-child{border-bottom:none}
+.li-key{color:var(--muted);width:130px;flex-shrink:0}
+.li-val{color:var(--text);font-family:'DM Mono',monospace;font-size:12px}
+.li-val.amber{color:var(--amber)}
 
-  /* INSIGHT BOX */
-  .insight {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--green);
-    border-radius: 6px;
-    padding: 12px 14px;
-    margin-top: 14px;
-  }
-  .insight-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--green);
-    margin-bottom: 6px;
-  }
-  .insight-item { font-size: 12px; color: var(--muted); margin-bottom: 4px; line-height: 1.5; }
-  .insight-item strong { color: var(--text); }
+/* SCORING PILLS */
+.pills{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.pill{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.pill.pos{color:var(--green);background:var(--green-bg);border-color:var(--green-border)}
+.pill.neg{color:var(--red);background:var(--red-bg);border-color:var(--red-border)}
 
-  /* SCORING PAGE */
-  .scoring-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-  .scoring-table th, .scoring-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; text-align: left; }
-  .scoring-table th { color: var(--muted); font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; }
-  .scoring-table .pos-val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--green); }
-  .scoring-table .neg-val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--red); }
-
-  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:14px}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="header-left">
-    <div class="header-title">High Cheese Hoser</div>
-    <div class="header-sub">H2H POINTS · 7 TEAMS · ID 40833</div>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-title">High Cheese Hoser</div>
+      <div class="hdr-sub">H2H POINTS · 7 TEAMS · #40833</div>
+    </div>
+    <div class="pick-badge">
+      <div class="pick-num" id="pickNum">0</div>
+      <div class="pick-label">picks</div>
+    </div>
   </div>
-  <div class="pick-counter">
-    <strong id="pickCount">0</strong>
-    MY PICKS
+
+  <div class="tabs">
+    <div class="tab active" data-page="board" onclick="switchPage('board')">Board</div>
+    <div class="tab" data-page="roster" onclick="switchPage('roster')">Roster</div>
+    <div class="tab" data-page="scoring" onclick="switchPage('scoring')">Scoring</div>
+  </div>
+
+  <div class="pages">
+    <!-- BOARD PAGE -->
+    <div class="page active" id="page-board">
+      <div class="search-bar">
+        <input type="search" class="search-input" id="searchInput" placeholder="Search players..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="renderBoard()">
+      </div>
+      <div class="filter-scroll" id="posFilters"></div>
+      <div class="sort-row" id="sortRow"></div>
+      <div id="insightStrip"></div>
+      <div class="player-list" id="playerList"></div>
+    </div>
+
+    <!-- ROSTER PAGE -->
+    <div class="page" id="page-roster">
+      <div class="roster-page">
+        <div class="stats-grid" id="rosterStats"></div>
+        <div class="section-hdr">Position balance</div>
+        <div class="pos-balance" id="posBalance"></div>
+        <div class="section-hdr">My picks</div>
+        <div class="roster-list" id="rosterList"></div>
+      </div>
+    </div>
+
+    <!-- SCORING PAGE -->
+    <div class="page" id="page-scoring">
+      <div class="scoring-page">
+        <div class="section-hdr">Batters</div>
+        <div class="score-section">
+          <div class="score-table">
+            <div class="score-row"><span class="score-cat">Home Runs (HR)</span><span class="score-val pos">+10.4</span></div>
+            <div class="score-row"><span class="score-cat">Triples (3B)</span><span class="score-val pos">+7.8</span></div>
+            <div class="score-row"><span class="score-cat">Doubles (2B)</span><span class="score-val pos">+5.2</span></div>
+            <div class="score-row"><span class="score-cat">Stolen Bases (SB)</span><span class="score-val pos">+4.2</span></div>
+            <div class="score-row"><span class="score-cat">Singles (1B)</span><span class="score-val pos">+2.6</span></div>
+            <div class="score-row"><span class="score-cat">Walks (BB)</span><span class="score-val pos">+2.6</span></div>
+            <div class="score-row"><span class="score-cat">Hit By Pitch (HBP)</span><span class="score-val pos">+2.6</span></div>
+            <div class="score-row"><span class="score-cat">Runs (R)</span><span class="score-val pos">+1.9</span></div>
+            <div class="score-row"><span class="score-cat">RBI</span><span class="score-val pos">+1.9</span></div>
+            <div class="score-row"><span class="score-cat">Strikeouts (K)</span><span class="score-val neg">−1</span></div>
+            <div class="score-row"><span class="score-cat">Errors (E)</span><span class="score-val neg">−1</span></div>
+          </div>
+        </div>
+        <div class="section-hdr">Pitchers</div>
+        <div class="score-section">
+          <div class="score-table">
+            <div class="score-row"><span class="score-cat">Wins (W)</span><span class="score-val pos">+8</span></div>
+            <div class="score-row"><span class="score-cat">Saves (SV)</span><span class="score-val pos">+8</span></div>
+            <div class="score-row"><span class="score-cat">Holds (HLD)</span><span class="score-val pos">+4</span></div>
+            <div class="score-row"><span class="score-cat">Strikeouts (K)</span><span class="score-val pos">+3</span></div>
+            <div class="score-row"><span class="score-cat">Outs (OUT)</span><span class="score-val pos">+1</span></div>
+            <div class="score-row"><span class="score-cat">Earned Runs (ER)</span><span class="score-val neg">−3</span></div>
+            <div class="score-row"><span class="score-cat">Hits (H)</span><span class="score-val neg">−1.3</span></div>
+            <div class="score-row"><span class="score-cat">Walks (BB)</span><span class="score-val neg">−1.3</span></div>
+            <div class="score-row"><span class="score-cat">Hit Batters (HBP)</span><span class="score-val neg">−1.3</span></div>
+          </div>
+        </div>
+        <div class="section-hdr">League rules</div>
+        <div class="league-info">
+          <div class="li-row"><span class="li-key">Draft</span><span class="li-val amber">Sat Mar 14 · 6:00 PM EDT</span></div>
+          <div class="li-row"><span class="li-key">Pick time</span><span class="li-val">2 minutes</span></div>
+          <div class="li-row"><span class="li-key">Teams</span><span class="li-val">7</span></div>
+          <div class="li-row"><span class="li-key">Roster size</span><span class="li-val">30 players</span></div>
+          <div class="li-row"><span class="li-key">Playoffs</span><span class="li-val">6 teams · Wks 22–24</span></div>
+          <div class="li-row"><span class="li-key">Acquisitions</span><span class="li-val">6/week · No max</span></div>
+          <div class="li-row"><span class="li-key">Min IP/week</span><span class="li-val">20 innings</span></div>
+          <div class="li-row"><span class="li-key">Waivers</span><span class="li-val">Continual rolling</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="main-tabs">
-  <div class="main-tab active" data-page="board" onclick="switchPage('board')">Draft Board</div>
-  <div class="main-tab" data-page="roster" onclick="switchPage('roster')">My Roster</div>
-  <div class="main-tab" data-page="scoring" onclick="switchPage('scoring')">Scoring</div>
-</div>
-
-<!-- DRAFT BOARD PAGE -->
-<div class="page active" id="page-board">
-  <div class="scoring-pills">
-    <span class="sp pos">HR ×10.4</span>
-    <span class="sp pos">SB ×4.2</span>
-    <span class="sp pos">2B ×5.2</span>
-    <span class="sp pos">3B ×7.8</span>
-    <span class="sp pos">BB ×2.6</span>
-    <span class="sp neg">K ×−1</span>
-    <span class="sp pos">W/SV ×8</span>
-    <span class="sp pos">pK ×3</span>
-    <span class="sp pos">HLD ×4</span>
-    <span class="sp neg">ER ×−3</span>
-  </div>
-
-  <div class="add-row">
-    <select class="add-select" id="addSel"></select>
-    <button class="btn btn-green" onclick="addPick()">+ My Pick</button>
-    <button class="btn btn-red" onclick="clearAll()">Clear</button>
-  </div>
-
-  <div class="pos-filters" id="posFilters"></div>
-
-  <div class="search-row">
-    <input type="text" id="searchBox" placeholder="Search player..." oninput="renderTable()">
-    <select id="sortSel" onchange="renderTable()">
-      <option value="pts">Sort: Season pts</option>
-      <option value="adpDelta">Sort: ADP value</option>
-      <option value="adp">Sort: Consensus ADP</option>
-    </select>
-    <label class="hide-row"><input type="checkbox" id="hideOff" onchange="renderTable()"> Hide drafted</label>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th onclick="setSort('name')">Player</th>
-          <th onclick="setSort('pos')">Pos</th>
-          <th onclick="setSort('pts')" class="sorted">Pts ↕</th>
-          <th onclick="setSort('adpDelta')">Value</th>
-          <th>Key stats</th>
-          <th onclick="setSort('hr')">HR/SV</th>
-          <th onclick="setSort('sb')">SB/K</th>
-          <th>Grade</th>
-          <th>Need</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-  <div class="insight" id="insightBox"></div>
-</div>
-
-<!-- ROSTER PAGE -->
-<div class="page" id="page-roster">
-  <div class="stats-grid" id="statsBar"></div>
-  <div class="section-label">Roster slots</div>
-  <div class="roster-grid" id="rosterGrid"></div>
-  <div class="divider"></div>
-  <div class="section-label">Roster balance by position</div>
-  <div id="posBalance"></div>
-</div>
-
-<!-- SCORING PAGE -->
-<div class="page" id="page-scoring">
-  <div class="section-label">Batters</div>
-  <table class="scoring-table">
-    <thead><tr><th>Category</th><th>Points</th></tr></thead>
-    <tbody>
-      <tr><td>Runs (R)</td><td class="pos-val">+1.9</td></tr>
-      <tr><td>Singles (1B)</td><td class="pos-val">+2.6</td></tr>
-      <tr><td>Doubles (2B)</td><td class="pos-val">+5.2</td></tr>
-      <tr><td>Triples (3B)</td><td class="pos-val">+7.8</td></tr>
-      <tr><td>Home Runs (HR)</td><td class="pos-val">+10.4</td></tr>
-      <tr><td>Runs Batted In (RBI)</td><td class="pos-val">+1.9</td></tr>
-      <tr><td>Stolen Bases (SB)</td><td class="pos-val">+4.2</td></tr>
-      <tr><td>Walks (BB)</td><td class="pos-val">+2.6</td></tr>
-      <tr><td>Hit By Pitch (HBP)</td><td class="pos-val">+2.6</td></tr>
-      <tr><td>Strikeouts (K)</td><td class="neg-val">−1</td></tr>
-      <tr><td>Errors (E)</td><td class="neg-val">−1</td></tr>
-    </tbody>
-  </table>
-  <div class="section-label">Pitchers</div>
-  <table class="scoring-table">
-    <thead><tr><th>Category</th><th>Points</th></tr></thead>
-    <tbody>
-      <tr><td>Wins (W)</td><td class="pos-val">+8</td></tr>
-      <tr><td>Saves (SV)</td><td class="pos-val">+8</td></tr>
-      <tr><td>Outs (OUT)</td><td class="pos-val">+1</td></tr>
-      <tr><td>Hits (H)</td><td class="neg-val">−1.3</td></tr>
-      <tr><td>Earned Runs (ER)</td><td class="neg-val">−3</td></tr>
-      <tr><td>Walks (BB)</td><td class="neg-val">−1.3</td></tr>
-      <tr><td>Hit Batters (HBP)</td><td class="neg-val">−1.3</td></tr>
-      <tr><td>Strikeouts (K)</td><td class="pos-val">+3</td></tr>
-      <tr><td>Holds (HLD)</td><td class="pos-val">+4</td></tr>
-    </tbody>
-  </table>
-  <div class="section-label" style="margin-top:14px">League rules</div>
-  <table class="scoring-table">
-    <tbody>
-      <tr><td>Draft time</td><td style="font-family:'DM Mono',monospace;color:var(--amber)">Sat Mar 14 · 6:00 PM EDT</td></tr>
-      <tr><td>Pick time</td><td>2 minutes</td></tr>
-      <tr><td>Playoffs</td><td>6 teams · Weeks 22–24</td></tr>
-      <tr><td>Acquisitions</td><td>6/week · No max season</td></tr>
-      <tr><td>Min IP/week</td><td>20 innings</td></tr>
-      <tr><td>Waiver</td><td>Continual rolling list</td></tr>
-    </tbody>
-  </table>
+<!-- BOTTOM SHEET -->
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-player" id="sheetPlayer"></div>
+  <div class="sheet-stats" id="sheetStats"></div>
+  <div class="sheet-actions" id="sheetActions"></div>
 </div>
 
 <script>
-const SC = { r:1.9,s1b:2.6,s2b:5.2,s3b:7.8,hr:10.4,rbi:1.9,sb:4.2,bb:2.6,hbp:2.6,k:-1,
-  pw:8,psv:8,pout:1,ph:-1.3,per:-3,pbb:-1.3,phbp:-1.3,pk:3,phld:4 };
+const SC={r:1.9,s1b:2.6,s2b:5.2,s3b:7.8,hr:10.4,rbi:1.9,sb:4.2,bb:2.6,hbp:2.6,k:-1,pw:8,psv:8,pout:1,ph:-1.3,per:-3,pbb:-1.3,phbp:-1.3,pk:3,phld:4};
 
-const RAW = [
+const RAW=[
   {n:'Shohei Ohtani',pos:'OF',adp:1,hr:47,r:133,rbi:108,sb:16,avg:.275,s2b:28,s3b:2,bb:88,k:105,war:9.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
   {n:'Aaron Judge',pos:'OF',adp:2,hr:54,r:123,rbi:121,sb:10,avg:.309,s2b:25,s3b:1,bb:95,k:130,war:10.1,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
   {n:'Bobby Witt Jr.',pos:'SS',adp:3,hr:30,r:106,rbi:93,sb:42,avg:.304,s2b:32,s3b:6,bb:42,k:128,war:8.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
@@ -550,33 +373,26 @@ const RAW = [
   {n:'Christian Yelich',pos:'OF',adp:92,hr:22,r:75,rbi:72,sb:12,avg:.270,s2b:24,s3b:2,bb:68,k:112,war:2.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
 ];
 
-// Dedupe
-const seen = new Set();
-const players = RAW.filter(p => { if(seen.has(p.n)) return false; seen.add(p.n); return true; });
+// dedupe
+const seen=new Set();
+const players=RAW.filter(p=>{if(seen.has(p.n))return false;seen.add(p.n);return true;});
 
-function calcPts(p) {
-  if (!p.pip) {
-    const s1b = Math.max(0, Math.round((p.avg*540) - (p.hr||0) - (p.s2b||0) - (p.s3b||0)));
-    return Math.round(
-      (p.r||0)*SC.r + s1b*SC.s1b + (p.s2b||0)*SC.s2b + (p.s3b||0)*SC.s3b +
-      (p.hr||0)*SC.hr + (p.rbi||0)*SC.rbi + (p.sb||0)*SC.sb + (p.bb||0)*SC.bb + (p.k||0)*SC.k
-    );
+function calcPts(p){
+  if(!p.pip){
+    const s1b=Math.max(0,Math.round((p.avg*540)-(p.hr||0)-(p.s2b||0)-(p.s3b||0)));
+    return Math.round((p.r||0)*SC.r+s1b*SC.s1b+(p.s2b||0)*SC.s2b+(p.s3b||0)*SC.s3b+(p.hr||0)*SC.hr+(p.rbi||0)*SC.rbi+(p.sb||0)*SC.sb+(p.bb||0)*SC.bb+(p.k||0)*SC.k);
   } else {
-    const outs = (p.ip||0)*3;
-    const er = Math.round(((p.era||0)/9)*(p.ip||0));
-    return Math.round(
-      (p.w||0)*SC.pw + (p.sv||0)*SC.psv + outs*SC.pout + (p.ph||0)*SC.ph +
-      er*SC.per + (p.pbb||0)*SC.pbb + (p.pK||0)*SC.pk + (p.hld||0)*SC.phld
-    );
+    const outs=(p.ip||0)*3,er=Math.round(((p.era||0)/9)*(p.ip||0));
+    return Math.round((p.w||0)*SC.pw+(p.sv||0)*SC.psv+outs*SC.pout+(p.ph||0)*SC.ph+er*SC.per+(p.pbb||0)*SC.pbb+(p.pK||0)*SC.pk+(p.hld||0)*SC.phld);
   }
 }
+players.forEach(p=>{p.pts=calcPts(p);p.ppg=p.pip?Math.round(p.pts/30):Math.round(p.pts/148);});
+const maxPts=Math.max(...players.map(p=>p.pts));
 
-players.forEach(p => {
-  p.pts = calcPts(p);
-  p.ppg = p.pip ? Math.round(p.pts/30) : Math.round(p.pts/148);
-});
-
-const SLOTS = [
+const NEEDED={C:1,'1B':1,'2B':1,'3B':1,SS:1,OF:4,SP:5,RP:2};
+const POS_FILTERS=['All','SP','RP','C','1B','2B','3B','SS','OF'];
+const SORTS=[{k:'pts',l:'Top pts'},{k:'adp',l:'ADP'},{k:'value',l:'Value'},{k:'hr',l:'HR/SV'},{k:'sb',l:'SB/K'}];
+const SLOTS=[
   {id:'C',l:'C'},{id:'1B',l:'1B'},{id:'2B',l:'2B'},{id:'3B',l:'3B'},{id:'SS',l:'SS'},
   {id:'OF1',l:'OF'},{id:'OF2',l:'OF'},{id:'OF3',l:'OF'},{id:'OF4',l:'OF'},
   {id:'U1',l:'Util'},{id:'U2',l:'Util'},{id:'U3',l:'Util'},{id:'U4',l:'Util'},
@@ -586,194 +402,272 @@ const SLOTS = [
   {id:'IL1',l:'IL'},{id:'IL2',l:'IL'},{id:'IL3',l:'IL'},{id:'IL4',l:'IL'}
 ];
 
-const NEEDED = {C:1,'1B':1,'2B':1,'3B':1,SS:1,OF:4,SP:5,RP:2};
-const POS_FILTERS = ['All','SP','RP','C','1B','2B','3B','SS','OF'];
+let myPicks=[],activePos='All',activeSort='pts',sheetPlayer=null;
 
-let myPicks = [];
-let activePos = 'All';
-let sortKey = 'pts';
+function save(){try{localStorage.setItem('hch2',JSON.stringify(myPicks.map(p=>p.n)));}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem('hch2')||'[]');s.forEach(n=>{const p=players.find(x=>x.n===n);if(p&&!myPicks.find(x=>x.n===n))myPicks.push(p);});}catch(e){}}
 
-// Persist to localStorage
-function save() { try { localStorage.setItem('hch_picks', JSON.stringify(myPicks.map(p=>p.n))); } catch(e){} }
-function load() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('hch_picks')||'[]');
-    saved.forEach(n => { const p = players.find(x=>x.n===n); if(p&&!myPicks.find(x=>x.n===n)) myPicks.push(p); });
-  } catch(e){}
+function getNeeds(){const f={};myPicks.forEach(p=>{f[p.pos]=(f[p.pos]||0)+1;});return Object.entries(NEEDED).filter(([pos,req])=>(f[pos]||0)<req).map(([pos])=>pos);}
+
+function getGrade(pts){
+  const r=pts/maxPts;
+  if(r>.85)return['g-elite','Elite'];
+  if(r>.68)return['g-great','Great'];
+  if(r>.50)return['g-avg','Avg'];
+  return['g-poor','Weak'];
+}
+function barColor(pts){
+  const r=pts/maxPts;
+  if(r>.85)return'#b794f4';
+  if(r>.68)return'#39d98a';
+  if(r>.50)return'#f0b429';
+  return'#f56565';
 }
 
-function getNeeds() {
-  const fill = {};
-  myPicks.forEach(p => { fill[p.pos] = (fill[p.pos]||0)+1; });
-  return Object.entries(NEEDED).filter(([pos,req]) => (fill[pos]||0)<req).map(([pos])=>pos);
-}
-
-function addPick() {
-  const n = document.getElementById('addSel').value;
-  if (!n || myPicks.find(p=>p.n===n)) return;
-  const p = players.find(x=>x.n===n);
-  if (p) { myPicks.push(p); save(); renderAll(); }
-}
-
-function removePick(n) { myPicks = myPicks.filter(p=>p.n!==n); save(); renderAll(); }
-function clearAll() { if(confirm('Clear all picks?')) { myPicks = []; save(); renderAll(); } }
-
-function switchPage(id) {
+function switchPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelector(`[data-page="${id}"]`).classList.add('active');
-  if (id==='roster') renderRoster();
+  if(id==='roster')renderRoster();
 }
 
-function setSort(k) { sortKey = k; renderTable(); }
+function openSheet(playerName){
+  const p=players.find(x=>x.n===playerName);
+  if(!p)return;
+  sheetPlayer=p;
+  const isMine=!!myPicks.find(x=>x.n===p.n);
+  const needs=getNeeds();
+  const [gc]=getGrade(p.pts);
+  const delta=Math.round(p.adp-Math.round(101-p.pts/28));
 
-function renderAll() {
-  document.getElementById('pickCount').textContent = myPicks.length;
-  renderSelect();
+  document.getElementById('sheetPlayer').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span class="pos-pill pp-${p.pos}">${p.pos}</span>
+      ${isMine?'<span class="my-tag">MY PICK</span>':''}
+      ${!isMine&&needs.includes(p.pos)?'<span class="need-tag">NEEDED</span>':''}
+    </div>
+    <div class="sheet-name">${p.n}</div>
+    <div class="sheet-meta">
+      <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">ADP ${p.adp}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">·</span>
+      <span class="grade ${gc}" style="font-size:11px">${getGrade(p.pts)[1]}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;${delta>8?'color:var(--green)':delta<-8?'color:var(--red)':'color:var(--dim)'}">${delta>8?`▼${delta}rd value`:delta<-8?`▲${Math.abs(delta)}rd reach`:'~fair'}</span>
+    </div>
+  `;
+
+  let statsHtml='';
+  if(p.pip){
+    statsHtml=`
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.era}</div><div class="sheet-stat-lbl">ERA</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.pK}</div><div class="sheet-stat-lbl">K</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.sv||0}</div><div class="sheet-stat-lbl">SV</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.hld||0}</div><div class="sheet-stat-lbl">HLD</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.w}</div><div class="sheet-stat-lbl">W</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.ip}</div><div class="sheet-stat-lbl">IP</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.pts}</div><div class="sheet-stat-lbl">Pts</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.war}</div><div class="sheet-stat-lbl">WAR</div></div>
+    `;
+  } else {
+    statsHtml=`
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.hr}</div><div class="sheet-stat-lbl">HR</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.sb}</div><div class="sheet-stat-lbl">SB</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.r}</div><div class="sheet-stat-lbl">R</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.rbi}</div><div class="sheet-stat-lbl">RBI</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">.${Math.round(p.avg*1000)}</div><div class="sheet-stat-lbl">AVG</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.s2b}</div><div class="sheet-stat-lbl">2B</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.pts}</div><div class="sheet-stat-lbl">Pts</div></div>
+      <div class="sheet-stat"><div class="sheet-stat-val">${p.war}</div><div class="sheet-stat-lbl">WAR</div></div>
+    `;
+  }
+  document.getElementById('sheetStats').innerHTML=statsHtml;
+
+  let actionsHtml='';
+  if(isMine){
+    actionsHtml=`<button class="sheet-btn btn-undraft" onclick="undraftPlayer('${p.n.replace(/'/g,"\\'")}')">Remove from my roster</button>`;
+  } else {
+    actionsHtml=`<button class="sheet-btn btn-draft" onclick="draftPlayer('${p.n.replace(/'/g,"\\'")}')">Draft this player</button>`;
+  }
+  actionsHtml+=`<button class="sheet-btn btn-skip" onclick="closeSheet()">Close</button>`;
+  document.getElementById('sheetActions').innerHTML=actionsHtml;
+
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+}
+
+function closeSheet(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+  sheetPlayer=null;
+}
+
+function draftPlayer(name){
+  const p=players.find(x=>x.n===name);
+  if(p&&!myPicks.find(x=>x.n===name)){myPicks.push(p);save();}
+  closeSheet();
+  renderAll();
+}
+
+function undraftPlayer(name){
+  myPicks=myPicks.filter(p=>p.n!==name);
+  save();
+  closeSheet();
+  renderAll();
+}
+
+function renderPosFilters(){
+  document.getElementById('posFilters').innerHTML=POS_FILTERS.map(p=>`<div class="pf${activePos===p?' active':''}" onclick="activePos='${p}';renderBoard()">${p}</div>`).join('');
+}
+
+function renderSortRow(){
+  document.getElementById('sortRow').innerHTML=SORTS.map(s=>`<div class="sort-btn${activeSort===s.k?' active':''}" onclick="activeSort='${s.k}';renderBoard()">${s.l}</div>`).join('');
+}
+
+function renderBoard(){
   renderPosFilters();
-  renderTable();
-}
+  renderSortRow();
+  const search=document.getElementById('searchInput').value.toLowerCase().trim();
+  const drafted=myPicks.map(p=>p.n);
+  const needs=getNeeds();
 
-function renderSelect() {
-  const drafted = myPicks.map(p=>p.n);
-  const avail = players.filter(p=>!drafted.includes(p.n)).sort((a,b)=>a.adp-b.adp);
-  document.getElementById('addSel').innerHTML = '<option value="">— select player —</option>' + avail.map(p=>`<option value="${p.n}">${p.n} (${p.pos} · ADP ${p.adp})</option>`).join('');
-}
-
-function renderPosFilters() {
-  document.getElementById('posFilters').innerHTML = POS_FILTERS.map(p=>`<div class="pf${activePos===p?' active':''}" onclick="activePos='${p}';renderAll()">${p}</div>`).join('');
-}
-
-function renderTable() {
-  const search = document.getElementById('searchBox').value.toLowerCase();
-  const hideOff = document.getElementById('hideOff').checked;
-  const sortSel = document.getElementById('sortSel').value;
-  if (['pts','adpDelta','adp'].includes(sortSel)) sortKey = sortSel;
-
-  const drafted = myPicks.map(p=>p.n);
-  const needs = getNeeds();
-  const maxPts = Math.max(...players.map(p=>p.pts));
-
-  let data = players.filter(p => {
-    if (activePos!=='All' && p.pos!==activePos) return false;
-    if (search && !p.n.toLowerCase().includes(search)) return false;
-    if (hideOff && drafted.includes(p.n)) return false;
+  let data=players.filter(p=>{
+    if(activePos!=='All'&&p.pos!==activePos)return false;
+    if(search&&!p.n.toLowerCase().includes(search))return false;
     return true;
-  }).map(p => ({...p, adpDelta: p.adp - Math.round(101 - p.pts/28)}));
+  }).map(p=>({...p,adpDelta:p.adp-Math.round(101-p.pts/28)}));
 
-  data.sort((a,b) => {
-    if (sortKey==='pts') return b.pts-a.pts;
-    if (sortKey==='adpDelta') return b.adpDelta-a.adpDelta;
-    if (sortKey==='adp') return a.adp-b.adp;
-    if (sortKey==='hr') return (b.hr||b.sv||0)-(a.hr||a.sv||0);
-    if (sortKey==='sb') return (b.sb||b.pK||0)-(a.sb||a.pK||0);
+  data.sort((a,b)=>{
+    if(activeSort==='pts')return b.pts-a.pts;
+    if(activeSort==='adp')return a.adp-b.adp;
+    if(activeSort==='value')return b.adpDelta-a.adpDelta;
+    if(activeSort==='hr')return(b.hr||b.sv||0)-(a.hr||a.sv||0);
+    if(activeSort==='sb')return(b.sb||b.pK||0)-(a.sb||a.pK||0);
     return b.pts-a.pts;
   });
 
-  function grade(pts) {
-    const r = pts/maxPts;
-    if (r>.85) return ['g-elite','Elite'];
-    if (r>.68) return ['g-great','Great'];
-    if (r>.50) return ['g-avg','Avg'];
-    return ['g-poor','Weak'];
+  // insight strip
+  const avail=data.filter(p=>!drafted.includes(p.n));
+  const topPts=avail.slice(0,3);
+  const topVal=avail.filter(p=>p.adpDelta>10).slice(0,2);
+  const needPicks=needs.flatMap(pos=>avail.filter(p=>p.pos===pos).slice(0,1)).slice(0,2);
+  let insightHtml='';
+  if(myPicks.length>0||needs.length>0){
+    insightHtml=`<div class="insight-strip">
+      <div class="insight-title">Live intel · ${myPicks.length}/30 picks · ${needs.length} positions open</div>
+      ${topPts.length?`<div class="insight-row">Best available: ${topPts.map(p=>`<strong>${p.n.split(' ').pop()}</strong> (${p.pts}pts)`).join(', ')}</div>`:''}
+      ${topVal.length?`<div class="insight-row">Value picks: ${topVal.map(p=>`<strong>${p.n.split(' ').pop()}</strong> +${Math.round(p.adpDelta)}rds`).join(', ')}</div>`:''}
+      ${needPicks.length?`<div class="insight-row">Fill needs: ${needPicks.map(p=>`<strong>${p.n.split(' ').pop()}</strong> (${p.pos})`).join(', ')}</div>`:''}
+    </div>`;
   }
-  function barColor(pts) {
-    const r = pts/maxPts;
-    if (r>.85) return '#b794f4';
-    if (r>.68) return '#39d98a';
-    if (r>.50) return '#f0b429';
-    return '#f56565';
+  document.getElementById('insightStrip').innerHTML=insightHtml;
+
+  if(data.length===0){
+    document.getElementById('playerList').innerHTML=`<div class="empty-state"><div class="empty-icon">⚾</div><div class="empty-text">No players found</div></div>`;
+    return;
   }
 
-  document.getElementById('tableBody').innerHTML = data.map(p => {
-    const isMine = !!myPicks.find(x=>x.n===p.n);
-    const isDrafted = drafted.includes(p.n) && !isMine;
-    const isNeed = needs.includes(p.pos) && !isMine && !isDrafted;
-    const pct = Math.round((p.pts/maxPts)*100);
-    const [gc, gl] = grade(p.pts);
-    const bc = barColor(p.pts);
-    const delta = Math.round(p.adpDelta);
-    const deltaHtml = delta>8?`<span class="delta-pos">▼${delta}rd value</span>`:delta<-8?`<span class="delta-neg">▲${Math.abs(delta)}rd reach</span>`:`<span class="delta-fair">~fair</span>`;
-    const keyStats = p.pip ? `${p.era} ERA · ${p.pK}K · ${p.sv}SV · ${p.hld}HLD` : `.${Math.round(p.avg*1000)} · ${p.hr}HR · ${p.sb}SB`;
-    const c1 = p.pip ? (p.sv||0) : (p.hr||0);
-    const c2 = p.pip ? (p.pK||0) : (p.sb||0);
-    const rowCls = `${isMine?'is-mine':''}${isDrafted?' is-drafted':''}${isNeed?' is-need':''}`;
-    return `<tr class="${rowCls}">
-      <td class="player-name">${p.n}${isMine?'<span class="tag tag-mine">MY PICK</span>':isDrafted?'<span class="tag tag-drafted">GONE</span>':''}</td>
-      <td><span class="pos-pill pp-${p.pos}">${p.pos}</span></td>
-      <td>
-        <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${bc}"></div></div><span class="pts-num">${p.pts}</span></div>
-        <div class="ppg-sub">${p.ppg}/start</div>
-      </td>
-      <td>${deltaHtml}<div class="adp-sub">ADP ${p.adp}</div></td>
-      <td style="font-size:11px;color:#888;max-width:130px;overflow:hidden;text-overflow:ellipsis">${keyStats}</td>
-      <td style="font-family:'DM Mono',monospace">${c1}</td>
-      <td style="font-family:'DM Mono',monospace">${c2}</td>
-      <td><span class="grade ${gc}">${gl}</span></td>
-      <td>${isNeed?`<span class="need-flag">${p.pos}</span>`:'—'}</td>
-    </tr>`;
-  }).join('');
+  document.getElementById('playerList').innerHTML=data.map(p=>{
+    const isMine=!!myPicks.find(x=>x.n===p.n);
+    const isDrafted=drafted.includes(p.n)&&!isMine;
+    const isNeed=needs.includes(p.pos)&&!isMine&&!isDrafted;
+    const pct=Math.round((p.pts/maxPts)*100);
+    const [gc,gl]=getGrade(p.pts);
+    const bc=barColor(p.pts);
+    const delta=Math.round(p.adpDelta);
+    const deltaStr=delta>8?`<span class="delta-pos">▼${delta}rd</span>`:delta<-8?`<span class="delta-neg">▲${Math.abs(delta)}rd</span>`:`<span class="delta-fair">~fair</span>`;
 
-  // insights
-  const avail = data.filter(p=>!drafted.includes(p.n));
-  const topPts = avail.slice(0,3);
-  const topVal = avail.filter(p=>Math.round(p.adpDelta)>10).slice(0,3);
-  const needPicks = needs.flatMap(pos=>avail.filter(p=>p.pos===pos).slice(0,1)).slice(0,3);
-  document.getElementById('insightBox').innerHTML = `
-    <div class="insight-title">Live intel · ${myPicks.length}/30 picks · ${needs.length} positions open</div>
-    ${topPts.length?`<div class="insight-item">Best available by pts: ${topPts.map(p=>`<strong>${p.n}</strong> (${p.pts})`).join(' · ')}</div>`:''}
-    ${topVal.length?`<div class="insight-item">Best value vs ADP: ${topVal.map(p=>`<strong>${p.n}</strong> +${Math.round(p.adpDelta)}rds`).join(' · ')}</div>`:''}
-    ${needPicks.length?`<div class="insight-item">Fill your needs: ${needPicks.map(p=>`<strong>${p.n}</strong> (${p.pos})`).join(' · ')}</div>`:''}
-  `;
-}
+    let statsRow='';
+    if(p.pip){
+      statsRow=`
+        <div class="stat"><div class="stat-val">${p.era}</div><div class="stat-lbl">ERA</div></div>
+        <div class="stat"><div class="stat-val">${p.pK}</div><div class="stat-lbl">K</div></div>
+        <div class="stat"><div class="stat-val">${p.sv||0}</div><div class="stat-lbl">SV</div></div>
+        <div class="stat"><div class="stat-val">${p.hld||0}</div><div class="stat-lbl">HLD</div></div>
+      `;
+    } else {
+      statsRow=`
+        <div class="stat"><div class="stat-val">${p.hr}</div><div class="stat-lbl">HR</div></div>
+        <div class="stat"><div class="stat-val">${p.sb}</div><div class="stat-lbl">SB</div></div>
+        <div class="stat"><div class="stat-val">${p.r}</div><div class="stat-lbl">R</div></div>
+        <div class="stat"><div class="stat-val">${p.rbi}</div><div class="stat-lbl">RBI</div></div>
+      `;
+    }
 
-function renderRoster() {
-  const fill = {};
-  const posCount = {};
-  myPicks.forEach(p => {
-    posCount[p.pos] = (posCount[p.pos]||0)+1;
-    fill[p.pos+posCount[p.pos]] = p;
-  });
-
-  document.getElementById('rosterGrid').innerHTML = SLOTS.slice(0,25).map(s => {
-    const p = fill[s.id];
-    return `<div class="slot${p?' filled':''}">
-      <div class="slot-pos">${s.l}</div>
-      ${p?`<div class="slot-name">${p.n}</div><div class="slot-pts">${p.pts}pts · ${p.ppg}/g</div><button class="slot-rm" onclick="removePick('${p.n}')">✕</button>`:`<span class="slot-empty">empty</span>`}
+    return `<div class="player-card${isMine?' my-pick':''}${isDrafted?' drafted':''}${isNeed?' need':''}" onclick="openSheet('${p.n.replace(/'/g,"\\'")}')">
+      <div class="card-top">
+        <span class="pos-pill pp-${p.pos}">${p.pos}</span>
+        <span class="card-name">${p.n}</span>
+        <span class="card-adp">#${p.adp}</span>
+        ${isMine?'<span class="my-tag">MY PICK</span>':''}
+        ${isNeed&&!isMine?'<span class="need-tag">NEED</span>':''}
+      </div>
+      <div class="card-stats">${statsRow}</div>
+      <div class="card-bottom">
+        <div class="pts-bar-wrap">
+          <div class="pts-info">
+            <span class="pts-num">${p.pts}<span style="font-size:10px;color:var(--muted);font-weight:400"> pts</span></span>
+            <span class="pts-lbl">${p.ppg}/start</span>
+          </div>
+          <div class="pts-bar-bg"><div class="pts-bar-fill" style="width:${pct}%;background:${bc}"></div></div>
+        </div>
+        ${deltaStr}
+        <span class="grade ${gc}" style="margin-left:8px">${gl}</span>
+      </div>
     </div>`;
   }).join('');
-
-  const totalPts = myPicks.reduce((a,p)=>a+p.pts,0);
-  const hitters = myPicks.filter(p=>!p.pip);
-  const pitchers = myPicks.filter(p=>p.pip);
-  const totalHR = hitters.reduce((a,p)=>a+(p.hr||0),0);
-  const totalSB = hitters.reduce((a,p)=>a+(p.sb||0),0);
-  const needs = getNeeds();
-
-  document.getElementById('statsBar').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Season pts</div><div class="stat-val">${totalPts.toLocaleString()}</div><div class="stat-sub">${myPicks.length} drafted</div></div>
-    <div class="stat-card"><div class="stat-label">HR / SB</div><div class="stat-val">${totalHR}/${totalSB}</div><div class="stat-sub">hitter totals</div></div>
-    <div class="stat-card"><div class="stat-label">SP / RP</div><div class="stat-val">${pitchers.filter(p=>p.pos==='SP').length}/${pitchers.filter(p=>p.pos==='RP').length}</div><div class="stat-sub">pitchers</div></div>
-    <div class="stat-card"><div class="stat-label">Still need</div><div class="stat-val" style="font-size:12px;padding-top:2px">${needs.length?needs.join(' '):' —'}</div><div class="stat-sub">open slots</div></div>
-  `;
-
-  const posOrder = ['C','1B','2B','3B','SS','OF','SP','RP'];
-  const posCount2 = {};
-  myPicks.forEach(p => { posCount2[p.pos]=(posCount2[p.pos]||0)+1; });
-  document.getElementById('posBalance').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${posOrder.map(pos=>{
-    const have = posCount2[pos]||0;
-    const need = NEEDED[pos]||0;
-    const ok = have>=need;
-    return `<div style="background:var(--bg3);border:1px solid ${ok?'rgba(57,217,138,0.2)':'rgba(240,180,41,0.25)'};border-radius:5px;padding:6px 10px;min-width:52px;text-align:center">
-      <div style="font-family:'DM Mono',monospace;font-size:10px;color:${ok?'#39d98a':'#f0b429'}">${pos}</div>
-      <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--text)">${have}/${need}</div>
-    </div>`;
-  }).join('')}</div>`;
 }
 
-load();
-renderAll();
+function renderRoster(){
+  const totalPts=myPicks.reduce((a,p)=>a+p.pts,0);
+  const hitters=myPicks.filter(p=>!p.pip);
+  const pitchers=myPicks.filter(p=>p.pip);
+  const totalHR=hitters.reduce((a,p)=>a+(p.hr||0),0);
+  const totalSB=hitters.reduce((a,p)=>a+(p.sb||0),0);
+  const needs=getNeeds();
+
+  document.getElementById('rosterStats').innerHTML=`
+    <div class="stat-card"><div class="sc-label">Season pts</div><div class="sc-val">${totalPts.toLocaleString()}</div><div class="sc-sub">${myPicks.length} drafted</div></div>
+    <div class="stat-card"><div class="sc-label">HR / SB</div><div class="sc-val">${totalHR}/${totalSB}</div><div class="sc-sub">hitter totals</div></div>
+    <div class="stat-card"><div class="sc-label">SP / RP</div><div class="sc-val">${pitchers.filter(p=>p.pos==='SP').length}/${pitchers.filter(p=>p.pos==='RP').length}</div><div class="sc-sub">pitchers</div></div>
+    <div class="stat-card"><div class="sc-label">Still need</div><div class="sc-val" style="font-size:14px;padding-top:4px">${needs.length?needs.join(' '):'Done'}</div><div class="sc-sub">${needs.length} open</div></div>
+  `;
+
+  const posOrder=['C','1B','2B','3B','SS','OF','SP','RP'];
+  const posCount={};myPicks.forEach(p=>{posCount[p.pos]=(posCount[p.pos]||0)+1;});
+  document.getElementById('posBalance').innerHTML=posOrder.map(pos=>{
+    const have=posCount[pos]||0,need=NEEDED[pos]||0,ok=have>=need;
+    return `<div class="pos-chip ${ok?'ok':'need'}"><div class="pos-chip-pos">${pos}</div><div class="pos-chip-val">${have}/${need}</div></div>`;
+  }).join('');
+
+  const fill={},pc={};
+  myPicks.forEach(p=>{pc[p.pos]=(pc[p.pos]||0)+1;fill[p.pos+pc[p.pos]]=p;});
+  document.getElementById('rosterList').innerHTML=SLOTS.slice(0,25).map(s=>{
+    const p=fill[s.id];
+    return p
+      ? `<div class="roster-item"><span class="ri-slot">${s.l}</span><span class="ri-name">${p.n}</span><span class="ri-pts">${p.pts}pts</span><span class="ri-rm" onclick="undraftFromRoster('${p.n.replace(/'/g,"\\'")}')">✕</span></div>`
+      : `<div class="roster-item empty"><span class="ri-slot">${s.l}</span><span class="ri-empty">empty</span></div>`;
+  }).join('');
+}
+
+function undraftFromRoster(name){
+  myPicks=myPicks.filter(p=>p.n!==name);
+  save();renderAll();
+}
+
+function renderAll(){
+  document.getElementById('pickNum').textContent=myPicks.length;
+  renderBoard();
+}
+
+// swipe to close sheet
+let touchStartY=0;
+document.getElementById('sheet').addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY;},{passive:true});
+document.getElementById('sheet').addEventListener('touchmove',e=>{
+  const dy=e.touches[0].clientY-touchStartY;
+  if(dy>60)closeSheet();
+},{passive:true});
+
+load();renderAll();
 </script>
 </body>
 </html>
