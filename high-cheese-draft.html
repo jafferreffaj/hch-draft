@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>High Cheese Hoser — Draft Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0e0f11;
+    --bg2: #161820;
+    --bg3: #1e2028;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f0;
+    --muted: #888;
+    --dim: #555;
+    --green: #39d98a;
+    --green-bg: rgba(57,217,138,0.1);
+    --amber: #f0b429;
+    --amber-bg: rgba(240,180,41,0.1);
+    --red: #f56565;
+    --red-bg: rgba(245,101,101,0.1);
+    --blue: #63b3ed;
+    --blue-bg: rgba(99,179,237,0.1);
+    --purple: #b794f4;
+    --purple-bg: rgba(183,148,244,0.1);
+    --accent: #39d98a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    padding-bottom: 40px;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; flex-direction: column; gap: 2px; }
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--green);
+    text-transform: uppercase;
+  }
+  .header-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .pick-counter {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: var(--green-bg);
+    color: var(--green);
+    border: 1px solid rgba(57,217,138,0.25);
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-align: center;
+  }
+  .pick-counter strong { font-size: 16px; display: block; }
+
+  /* TABS */
+  .main-tabs {
+    display: flex;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .main-tab {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 11px 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s;
+  }
+  .main-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  /* PAGE SECTIONS */
+  .page { display: none; padding: 16px 20px; }
+  .page.active { display: block; }
+
+  /* STATS BAR */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .stat-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--text); }
+  .stat-sub { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+  /* ROSTER GRID */
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .roster-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 480px) { .roster-grid { grid-template-columns: repeat(3, 1fr); } .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .slot {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 8px;
+    min-height: 52px;
+    position: relative;
+  }
+  .slot.filled { border-color: rgba(57,217,138,0.2); }
+  .slot-pos { font-size: 9px; font-family: 'DM Mono', monospace; color: var(--dim); margin-bottom: 2px; text-transform: uppercase; }
+  .slot-name { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .slot-pts { font-size: 9px; font-family: 'DM Mono', monospace; color: var(--green); margin-top: 2px; }
+  .slot-empty { font-size: 10px; color: var(--dim); font-style: italic; }
+  .slot-rm {
+    position: absolute; top: 4px; right: 5px;
+    font-size: 11px; color: var(--dim); background: none; border: none;
+    cursor: pointer; line-height: 1; padding: 0;
+  }
+  .slot-rm:hover { color: var(--red); }
+
+  /* ADD PLAYER */
+  .add-row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  select, input[type=text] {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    border-radius: 5px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+  }
+  select:focus, input:focus { border-color: var(--green); }
+  .add-select { flex: 1; min-width: 180px; }
+  .btn {
+    padding: 8px 14px;
+    border-radius: 5px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: var(--bg2); border-color: var(--border2); }
+  .btn-green { background: var(--green-bg); color: var(--green); border-color: rgba(57,217,138,0.3); }
+  .btn-green:hover { background: rgba(57,217,138,0.18); }
+  .btn-red { background: var(--red-bg); color: var(--red); border-color: rgba(245,101,101,0.3); }
+
+  /* POSITION FILTER */
+  .pos-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .pf {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .pf.active { background: var(--green-bg); color: var(--green); border-color: rgba(57,217,138,0.3); }
+
+  /* SEARCH + SORT ROW */
+  .search-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+  .search-row input { width: 160px; }
+  .hide-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .hide-row input[type=checkbox] { accent-color: var(--green); }
+
+  /* SCORING PILLS */
+  .scoring-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
+  .sp {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--bg3);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .sp.pos { color: var(--green); background: var(--green-bg); border-color: rgba(57,217,138,0.2); }
+  .sp.neg { color: var(--red); background: var(--red-bg); border-color: rgba(245,101,101,0.2); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  thead tr { border-bottom: 1px solid var(--border2); }
+  th {
+    padding: 7px 8px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { color: var(--muted); }
+  th.sorted { color: var(--green); }
+  td { padding: 7px 8px; border-bottom: 1px solid var(--border); font-size: 12px; white-space: nowrap; }
+  tr.is-drafted td { opacity: 0.3; }
+  tr.is-drafted td:first-child { opacity: 1; }
+  tr.is-mine td { background: rgba(57,217,138,0.04); }
+  tr.is-need { border-left: 2px solid var(--amber); }
+  tr.is-mine { border-left: 2px solid var(--green); }
+
+  .player-name { font-weight: 500; }
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .tag-mine { background: var(--green-bg); color: var(--green); }
+  .tag-drafted { background: var(--bg3); color: var(--dim); }
+
+  .pos-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+  .pp-SP { background: var(--blue-bg); color: var(--blue); }
+  .pp-RP { background: var(--amber-bg); color: var(--amber); }
+  .pp-C  { background: var(--red-bg); color: var(--red); }
+  .pp-1B { background: var(--green-bg); color: var(--green); }
+  .pp-2B { background: var(--purple-bg); color: var(--purple); }
+  .pp-3B { background: rgba(240,180,41,0.08); color: #e0a020; }
+  .pp-SS { background: rgba(57,217,138,0.06); color: #2eb877; }
+  .pp-OF { background: rgba(99,179,237,0.08); color: #5ea8d4; }
+
+  .bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .bar-bg { flex: 1; height: 4px; background: var(--bg2); border-radius: 2px; min-width: 40px; }
+  .bar-fill { height: 4px; border-radius: 2px; }
+  .pts-num { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; min-width: 36px; }
+  .ppg-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
+
+  .delta-pos { color: var(--green); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .delta-neg { color: var(--red); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .delta-fair { color: var(--dim); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .adp-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dim); }
+
+  .grade {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .g-elite { background: var(--purple-bg); color: var(--purple); }
+  .g-great { background: var(--green-bg); color: var(--green); }
+  .g-avg { background: var(--amber-bg); color: var(--amber); }
+  .g-poor { background: var(--red-bg); color: var(--red); }
+  .need-flag {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    background: var(--amber-bg); color: var(--amber);
+    padding: 2px 5px; border-radius: 3px;
+  }
+
+  /* INSIGHT BOX */
+  .insight {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-top: 14px;
+  }
+  .insight-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+  .insight-item { font-size: 12px; color: var(--muted); margin-bottom: 4px; line-height: 1.5; }
+  .insight-item strong { color: var(--text); }
+
+  /* SCORING PAGE */
+  .scoring-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  .scoring-table th, .scoring-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; text-align: left; }
+  .scoring-table th { color: var(--muted); font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; }
+  .scoring-table .pos-val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--green); }
+  .scoring-table .neg-val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--red); }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-title">High Cheese Hoser</div>
+    <div class="header-sub">H2H POINTS · 7 TEAMS · ID 40833</div>
+  </div>
+  <div class="pick-counter">
+    <strong id="pickCount">0</strong>
+    MY PICKS
+  </div>
+</div>
+
+<div class="main-tabs">
+  <div class="main-tab active" data-page="board" onclick="switchPage('board')">Draft Board</div>
+  <div class="main-tab" data-page="roster" onclick="switchPage('roster')">My Roster</div>
+  <div class="main-tab" data-page="scoring" onclick="switchPage('scoring')">Scoring</div>
+</div>
+
+<!-- DRAFT BOARD PAGE -->
+<div class="page active" id="page-board">
+  <div class="scoring-pills">
+    <span class="sp pos">HR ×10.4</span>
+    <span class="sp pos">SB ×4.2</span>
+    <span class="sp pos">2B ×5.2</span>
+    <span class="sp pos">3B ×7.8</span>
+    <span class="sp pos">BB ×2.6</span>
+    <span class="sp neg">K ×−1</span>
+    <span class="sp pos">W/SV ×8</span>
+    <span class="sp pos">pK ×3</span>
+    <span class="sp pos">HLD ×4</span>
+    <span class="sp neg">ER ×−3</span>
+  </div>
+
+  <div class="add-row">
+    <select class="add-select" id="addSel"></select>
+    <button class="btn btn-green" onclick="addPick()">+ My Pick</button>
+    <button class="btn btn-red" onclick="clearAll()">Clear</button>
+  </div>
+
+  <div class="pos-filters" id="posFilters"></div>
+
+  <div class="search-row">
+    <input type="text" id="searchBox" placeholder="Search player..." oninput="renderTable()">
+    <select id="sortSel" onchange="renderTable()">
+      <option value="pts">Sort: Season pts</option>
+      <option value="adpDelta">Sort: ADP value</option>
+      <option value="adp">Sort: Consensus ADP</option>
+    </select>
+    <label class="hide-row"><input type="checkbox" id="hideOff" onchange="renderTable()"> Hide drafted</label>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="setSort('name')">Player</th>
+          <th onclick="setSort('pos')">Pos</th>
+          <th onclick="setSort('pts')" class="sorted">Pts ↕</th>
+          <th onclick="setSort('adpDelta')">Value</th>
+          <th>Key stats</th>
+          <th onclick="setSort('hr')">HR/SV</th>
+          <th onclick="setSort('sb')">SB/K</th>
+          <th>Grade</th>
+          <th>Need</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="insight" id="insightBox"></div>
+</div>
+
+<!-- ROSTER PAGE -->
+<div class="page" id="page-roster">
+  <div class="stats-grid" id="statsBar"></div>
+  <div class="section-label">Roster slots</div>
+  <div class="roster-grid" id="rosterGrid"></div>
+  <div class="divider"></div>
+  <div class="section-label">Roster balance by position</div>
+  <div id="posBalance"></div>
+</div>
+
+<!-- SCORING PAGE -->
+<div class="page" id="page-scoring">
+  <div class="section-label">Batters</div>
+  <table class="scoring-table">
+    <thead><tr><th>Category</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td>Runs (R)</td><td class="pos-val">+1.9</td></tr>
+      <tr><td>Singles (1B)</td><td class="pos-val">+2.6</td></tr>
+      <tr><td>Doubles (2B)</td><td class="pos-val">+5.2</td></tr>
+      <tr><td>Triples (3B)</td><td class="pos-val">+7.8</td></tr>
+      <tr><td>Home Runs (HR)</td><td class="pos-val">+10.4</td></tr>
+      <tr><td>Runs Batted In (RBI)</td><td class="pos-val">+1.9</td></tr>
+      <tr><td>Stolen Bases (SB)</td><td class="pos-val">+4.2</td></tr>
+      <tr><td>Walks (BB)</td><td class="pos-val">+2.6</td></tr>
+      <tr><td>Hit By Pitch (HBP)</td><td class="pos-val">+2.6</td></tr>
+      <tr><td>Strikeouts (K)</td><td class="neg-val">−1</td></tr>
+      <tr><td>Errors (E)</td><td class="neg-val">−1</td></tr>
+    </tbody>
+  </table>
+  <div class="section-label">Pitchers</div>
+  <table class="scoring-table">
+    <thead><tr><th>Category</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td>Wins (W)</td><td class="pos-val">+8</td></tr>
+      <tr><td>Saves (SV)</td><td class="pos-val">+8</td></tr>
+      <tr><td>Outs (OUT)</td><td class="pos-val">+1</td></tr>
+      <tr><td>Hits (H)</td><td class="neg-val">−1.3</td></tr>
+      <tr><td>Earned Runs (ER)</td><td class="neg-val">−3</td></tr>
+      <tr><td>Walks (BB)</td><td class="neg-val">−1.3</td></tr>
+      <tr><td>Hit Batters (HBP)</td><td class="neg-val">−1.3</td></tr>
+      <tr><td>Strikeouts (K)</td><td class="pos-val">+3</td></tr>
+      <tr><td>Holds (HLD)</td><td class="pos-val">+4</td></tr>
+    </tbody>
+  </table>
+  <div class="section-label" style="margin-top:14px">League rules</div>
+  <table class="scoring-table">
+    <tbody>
+      <tr><td>Draft time</td><td style="font-family:'DM Mono',monospace;color:var(--amber)">Sat Mar 14 · 6:00 PM EDT</td></tr>
+      <tr><td>Pick time</td><td>2 minutes</td></tr>
+      <tr><td>Playoffs</td><td>6 teams · Weeks 22–24</td></tr>
+      <tr><td>Acquisitions</td><td>6/week · No max season</td></tr>
+      <tr><td>Min IP/week</td><td>20 innings</td></tr>
+      <tr><td>Waiver</td><td>Continual rolling list</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+const SC = { r:1.9,s1b:2.6,s2b:5.2,s3b:7.8,hr:10.4,rbi:1.9,sb:4.2,bb:2.6,hbp:2.6,k:-1,
+  pw:8,psv:8,pout:1,ph:-1.3,per:-3,pbb:-1.3,phbp:-1.3,pk:3,phld:4 };
+
+const RAW = [
+  {n:'Shohei Ohtani',pos:'OF',adp:1,hr:47,r:133,rbi:108,sb:16,avg:.275,s2b:28,s3b:2,bb:88,k:105,war:9.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Aaron Judge',pos:'OF',adp:2,hr:54,r:123,rbi:121,sb:10,avg:.309,s2b:25,s3b:1,bb:95,k:130,war:10.1,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Bobby Witt Jr.',pos:'SS',adp:3,hr:30,r:106,rbi:93,sb:42,avg:.304,s2b:32,s3b:6,bb:42,k:128,war:8.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Juan Soto',pos:'OF',adp:4,hr:33,r:110,rbi:95,sb:22,avg:.288,s2b:35,s3b:2,bb:118,k:95,war:7.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'José Ramírez',pos:'3B',adp:5,hr:29,r:105,rbi:100,sb:26,avg:.282,s2b:38,s3b:3,bb:72,k:88,war:7.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Ronald Acuña Jr.',pos:'OF',adp:6,hr:30,r:110,rbi:90,sb:25,avg:.290,s2b:30,s3b:3,bb:82,k:105,war:7.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Elly De La Cruz',pos:'SS',adp:7,hr:29,r:112,rbi:93,sb:46,avg:.266,s2b:25,s3b:7,bb:55,k:180,war:6.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Tarik Skubal',pos:'SP',adp:8,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:7.0,pip:true,era:2.58,w:18,sv:0,pK:220,hld:0,ip:195,pbb:52,ph:162},
+  {n:'Paul Skenes',pos:'SP',adp:9,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:6.5,pip:true,era:2.71,w:15,sv:0,pK:215,hld:0,ip:185,pbb:60,ph:155},
+  {n:'Gunnar Henderson',pos:'SS',adp:10,hr:35,r:105,rbi:100,sb:18,avg:.275,s2b:30,s3b:3,bb:78,k:148,war:7.1,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Garrett Crochet',pos:'SP',adp:11,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:6.2,pip:true,era:2.85,w:16,sv:0,pK:230,hld:0,ip:200,pbb:68,ph:168},
+  {n:'Freddie Freeman',pos:'1B',adp:12,hr:25,r:100,rbi:105,sb:8,avg:.302,s2b:38,s3b:2,bb:88,k:95,war:5.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Cal Raleigh',pos:'C',adp:13,hr:35,r:80,rbi:90,sb:2,avg:.215,s2b:18,s3b:0,bb:55,k:152,war:4.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Julio Rodriguez',pos:'OF',adp:14,hr:31,r:100,rbi:88,sb:35,avg:.262,s2b:28,s3b:4,bb:58,k:148,war:5.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Jackson Chourio',pos:'OF',adp:15,hr:22,r:90,rbi:80,sb:22,avg:.270,s2b:25,s3b:3,bb:48,k:125,war:4.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Jazz Chisholm',pos:'2B',adp:16,hr:27,r:98,rbi:85,sb:20,avg:.265,s2b:26,s3b:3,bb:62,k:155,war:5.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Trea Turner',pos:'SS',adp:17,hr:20,r:100,rbi:80,sb:32,avg:.278,s2b:30,s3b:5,bb:50,k:115,war:5.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Francisco Lindor',pos:'SS',adp:18,hr:25,r:98,rbi:90,sb:20,avg:.272,s2b:32,s3b:3,bb:68,k:128,war:5.3,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Nick Kurtz',pos:'1B',adp:19,hr:32,r:95,rbi:100,sb:6,avg:.270,s2b:28,s3b:2,bb:62,k:135,war:4.9,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Yordan Alvarez',pos:'OF',adp:20,hr:35,r:95,rbi:105,sb:3,avg:.285,s2b:32,s3b:1,bb:82,k:115,war:6.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Vladimir Guerrero Jr.',pos:'1B',adp:21,hr:32,r:95,rbi:100,sb:3,avg:.290,s2b:30,s3b:1,bb:72,k:105,war:5.1,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Kyle Tucker',pos:'OF',adp:22,hr:28,r:90,rbi:90,sb:18,avg:.280,s2b:30,s3b:2,bb:75,k:122,war:5.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Corbin Carroll',pos:'OF',adp:23,hr:20,r:95,rbi:70,sb:38,avg:.262,s2b:22,s3b:5,bb:62,k:125,war:4.7,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Manny Machado',pos:'3B',adp:25,hr:28,r:88,rbi:95,sb:5,avg:.272,s2b:30,s3b:1,bb:68,k:108,war:5.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Ketel Marte',pos:'2B',adp:26,hr:24,r:88,rbi:82,sb:12,avg:.280,s2b:28,s3b:2,bb:62,k:108,war:4.6,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Junior Caminero',pos:'3B',adp:27,hr:28,r:85,rbi:90,sb:8,avg:.265,s2b:28,s3b:2,bb:48,k:145,war:4.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Rafael Devers',pos:'3B',adp:28,hr:30,r:90,rbi:100,sb:3,avg:.275,s2b:32,s3b:1,bb:65,k:125,war:4.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Pete Crow-Armstrong',pos:'OF',adp:29,hr:22,r:85,rbi:75,sb:28,avg:.255,s2b:24,s3b:4,bb:48,k:148,war:3.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Riley Greene',pos:'OF',adp:30,hr:29,r:87,rbi:95,sb:8,avg:.260,s2b:30,s3b:2,bb:72,k:130,war:4.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Logan Webb',pos:'SP',adp:30,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:5.2,pip:true,era:3.10,w:15,sv:0,pK:175,hld:0,ip:195,pbb:48,ph:172},
+  {n:'Pete Alonso',pos:'1B',adp:31,hr:36,r:90,rbi:105,sb:2,avg:.255,s2b:28,s3b:1,bb:72,k:148,war:4.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Bo Bichette',pos:'SS',adp:32,hr:20,r:85,rbi:78,sb:14,avg:.278,s2b:28,s3b:3,bb:45,k:115,war:3.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Max Fried',pos:'SP',adp:33,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:4.8,pip:true,era:3.25,w:14,sv:0,pK:185,hld:0,ip:182,pbb:55,ph:165},
+  {n:'Chris Sale',pos:'SP',adp:34,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:5.0,pip:true,era:3.10,w:14,sv:0,pK:200,hld:0,ip:185,pbb:52,ph:158},
+  {n:'Yoshinobu Yamamoto',pos:'SP',adp:35,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:5.1,pip:true,era:3.05,w:15,sv:0,pK:195,hld:0,ip:188,pbb:55,ph:160},
+  {n:'Wyatt Langford',pos:'OF',adp:36,hr:22,r:90,rbi:80,sb:18,avg:.270,s2b:26,s3b:3,bb:58,k:122,war:3.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Corey Seager',pos:'SS',adp:37,hr:28,r:88,rbi:92,sb:5,avg:.278,s2b:30,s3b:1,bb:65,k:118,war:4.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Zach Neto',pos:'SS',adp:38,hr:25,r:88,rbi:82,sb:25,avg:.257,s2b:26,s3b:3,bb:55,k:135,war:4.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'James Wood',pos:'OF',adp:39,hr:25,r:85,rbi:82,sb:18,avg:.260,s2b:28,s3b:3,bb:65,k:145,war:3.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'William Contreras',pos:'C',adp:40,hr:22,r:72,rbi:80,sb:4,avg:.278,s2b:22,s3b:1,bb:55,k:105,war:3.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Nolan Arenado',pos:'3B',adp:41,hr:26,r:80,rbi:95,sb:3,avg:.268,s2b:28,s3b:1,bb:55,k:108,war:4.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Mason Miller',pos:'RP',adp:42,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:2.8,pip:true,era:2.20,w:3,sv:38,pK:88,hld:2,ip:65,pbb:18,ph:42},
+  {n:'Edwin Diaz',pos:'RP',adp:43,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:2.5,pip:true,era:2.50,w:3,sv:35,pK:85,hld:2,ip:62,pbb:20,ph:45},
+  {n:'CJ Abrams',pos:'SS',adp:44,hr:20,r:88,rbi:72,sb:30,avg:.255,s2b:22,s3b:4,bb:48,k:138,war:3.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'MacKenzie Gore',pos:'SP',adp:45,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:3.8,pip:true,era:3.40,w:13,sv:0,pK:195,hld:0,ip:178,pbb:72,ph:162},
+  {n:'Gerrit Cole',pos:'SP',adp:46,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:4.5,pip:true,era:3.20,w:14,sv:0,pK:200,hld:0,ip:190,pbb:58,ph:165},
+  {n:'Spencer Strider',pos:'SP',adp:49,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:5.0,pip:true,era:3.00,w:14,sv:0,pK:220,hld:0,ip:180,pbb:55,ph:148},
+  {n:'Eugenio Suarez',pos:'3B',adp:50,hr:38,r:82,rbi:95,sb:4,avg:.240,s2b:25,s3b:1,bb:62,k:162,war:3.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Ozzie Albies',pos:'2B',adp:51,hr:22,r:85,rbi:80,sb:14,avg:.262,s2b:28,s3b:2,bb:48,k:112,war:3.6,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Seiya Suzuki',pos:'OF',adp:52,hr:30,r:80,rbi:85,sb:6,avg:.260,s2b:25,s3b:1,bb:65,k:115,war:3.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Mookie Betts',pos:'SS',adp:53,hr:20,r:88,rbi:72,sb:14,avg:.255,s2b:25,s3b:2,bb:72,k:108,war:4.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Hunter Goodman',pos:'C',adp:54,hr:26,r:65,rbi:80,sb:3,avg:.252,s2b:20,s3b:1,bb:42,k:145,war:2.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Oneil Cruz',pos:'SS',adp:55,hr:25,r:85,rbi:80,sb:18,avg:.255,s2b:25,s3b:3,bb:52,k:168,war:3.1,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Tyler Glasnow',pos:'SP',adp:56,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:4.0,pip:true,era:3.15,w:13,sv:0,pK:210,hld:0,ip:155,pbb:52,ph:132},
+  {n:'Cristopher Sanchez',pos:'SP',adp:57,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:3.8,pip:true,era:3.35,w:13,sv:0,pK:165,hld:0,ip:188,pbb:50,ph:165},
+  {n:'Chase Burns',pos:'SP',adp:62,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:3.5,pip:true,era:3.20,w:13,sv:0,pK:200,hld:0,ip:175,pbb:62,ph:155},
+  {n:'Jhoan Duran',pos:'RP',adp:63,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:2.2,pip:true,era:2.65,w:4,sv:30,pK:82,hld:5,ip:68,pbb:22,ph:48},
+  {n:'Anthony Volpe',pos:'SS',adp:60,hr:18,r:88,rbi:72,sb:22,avg:.248,s2b:22,s3b:3,bb:52,k:148,war:3.0,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Brandon Lowe',pos:'2B',adp:105,hr:28,r:82,rbi:80,sb:8,avg:.252,s2b:26,s3b:1,bb:58,k:148,war:3.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Dylan Crews',pos:'OF',adp:80,hr:20,r:82,rbi:72,sb:30,avg:.258,s2b:22,s3b:4,bb:55,k:128,war:3.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Michael Busch',pos:'1B',adp:90,hr:30,r:78,rbi:88,sb:4,avg:.255,s2b:28,s3b:1,bb:58,k:148,war:2.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Willy Adames',pos:'SS',adp:88,hr:24,r:80,rbi:82,sb:8,avg:.248,s2b:26,s3b:2,bb:58,k:148,war:2.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Ivan Herrera',pos:'C',adp:175,hr:18,r:62,rbi:65,sb:2,avg:.278,s2b:18,s3b:1,bb:52,k:88,war:2.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Zack Wheeler',pos:'SP',adp:71,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:4.2,pip:true,era:3.00,w:14,sv:0,pK:195,hld:0,ip:170,pbb:45,ph:148},
+  {n:'Jonathan Aranda',pos:'1B',adp:130,hr:18,r:75,rbi:68,sb:3,avg:.295,s2b:22,s3b:1,bb:58,k:98,war:2.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Andres Munoz',pos:'RP',adp:67,hr:null,r:null,rbi:null,sb:null,avg:null,s2b:null,s3b:null,bb:null,k:null,war:2.4,pip:true,era:2.30,w:4,sv:33,pK:85,hld:3,ip:65,pbb:20,ph:42},
+  {n:'JJ Wetherholt',pos:'2B',adp:145,hr:15,r:78,rbi:62,sb:20,avg:.272,s2b:22,s3b:2,bb:55,k:105,war:2.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Bo Naylor',pos:'C',adp:95,hr:22,r:68,rbi:72,sb:8,avg:.248,s2b:20,s3b:1,bb:48,k:125,war:2.6,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Bryan Reynolds',pos:'OF',adp:148,hr:22,r:78,rbi:78,sb:8,avg:.262,s2b:25,s3b:2,bb:62,k:118,war:2.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Dansby Swanson',pos:'SS',adp:75,hr:22,r:78,rbi:80,sb:18,avg:.245,s2b:24,s3b:2,bb:52,k:148,war:2.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Roman Anthony',pos:'OF',adp:100,hr:18,r:75,rbi:65,sb:14,avg:.265,s2b:22,s3b:2,bb:58,k:118,war:2.2,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Jordan Lawlar',pos:'OF',adp:105,hr:18,r:80,rbi:65,sb:30,avg:.255,s2b:20,s3b:3,bb:55,k:128,war:2.5,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Xavier Edwards',pos:'2B',adp:115,hr:5,r:78,rbi:50,sb:28,avg:.285,s2b:18,s3b:2,bb:52,k:68,war:2.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Luke Keaschall',pos:'2B',adp:120,hr:12,r:82,rbi:55,sb:30,avg:.278,s2b:22,s3b:2,bb:62,k:88,war:2.4,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+  {n:'Christian Yelich',pos:'OF',adp:92,hr:22,r:75,rbi:72,sb:12,avg:.270,s2b:24,s3b:2,bb:68,k:112,war:2.8,pip:false,era:null,w:null,sv:null,pK:null,hld:null,ip:null,pbb:null,ph:null},
+];
+
+// Dedupe
+const seen = new Set();
+const players = RAW.filter(p => { if(seen.has(p.n)) return false; seen.add(p.n); return true; });
+
+function calcPts(p) {
+  if (!p.pip) {
+    const s1b = Math.max(0, Math.round((p.avg*540) - (p.hr||0) - (p.s2b||0) - (p.s3b||0)));
+    return Math.round(
+      (p.r||0)*SC.r + s1b*SC.s1b + (p.s2b||0)*SC.s2b + (p.s3b||0)*SC.s3b +
+      (p.hr||0)*SC.hr + (p.rbi||0)*SC.rbi + (p.sb||0)*SC.sb + (p.bb||0)*SC.bb + (p.k||0)*SC.k
+    );
+  } else {
+    const outs = (p.ip||0)*3;
+    const er = Math.round(((p.era||0)/9)*(p.ip||0));
+    return Math.round(
+      (p.w||0)*SC.pw + (p.sv||0)*SC.psv + outs*SC.pout + (p.ph||0)*SC.ph +
+      er*SC.per + (p.pbb||0)*SC.pbb + (p.pK||0)*SC.pk + (p.hld||0)*SC.phld
+    );
+  }
+}
+
+players.forEach(p => {
+  p.pts = calcPts(p);
+  p.ppg = p.pip ? Math.round(p.pts/30) : Math.round(p.pts/148);
+});
+
+const SLOTS = [
+  {id:'C',l:'C'},{id:'1B',l:'1B'},{id:'2B',l:'2B'},{id:'3B',l:'3B'},{id:'SS',l:'SS'},
+  {id:'OF1',l:'OF'},{id:'OF2',l:'OF'},{id:'OF3',l:'OF'},{id:'OF4',l:'OF'},
+  {id:'U1',l:'Util'},{id:'U2',l:'Util'},{id:'U3',l:'Util'},{id:'U4',l:'Util'},
+  {id:'SP1',l:'SP'},{id:'SP2',l:'SP'},{id:'SP3',l:'SP'},{id:'SP4',l:'SP'},{id:'SP5',l:'SP'},
+  {id:'RP1',l:'RP'},{id:'RP2',l:'RP'},{id:'P3',l:'P'},{id:'P4',l:'P'},
+  {id:'B1',l:'BN'},{id:'B2',l:'BN'},{id:'B3',l:'BN'},{id:'B4',l:'BN'},
+  {id:'IL1',l:'IL'},{id:'IL2',l:'IL'},{id:'IL3',l:'IL'},{id:'IL4',l:'IL'}
+];
+
+const NEEDED = {C:1,'1B':1,'2B':1,'3B':1,SS:1,OF:4,SP:5,RP:2};
+const POS_FILTERS = ['All','SP','RP','C','1B','2B','3B','SS','OF'];
+
+let myPicks = [];
+let activePos = 'All';
+let sortKey = 'pts';
+
+// Persist to localStorage
+function save() { try { localStorage.setItem('hch_picks', JSON.stringify(myPicks.map(p=>p.n))); } catch(e){} }
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('hch_picks')||'[]');
+    saved.forEach(n => { const p = players.find(x=>x.n===n); if(p&&!myPicks.find(x=>x.n===n)) myPicks.push(p); });
+  } catch(e){}
+}
+
+function getNeeds() {
+  const fill = {};
+  myPicks.forEach(p => { fill[p.pos] = (fill[p.pos]||0)+1; });
+  return Object.entries(NEEDED).filter(([pos,req]) => (fill[pos]||0)<req).map(([pos])=>pos);
+}
+
+function addPick() {
+  const n = document.getElementById('addSel').value;
+  if (!n || myPicks.find(p=>p.n===n)) return;
+  const p = players.find(x=>x.n===n);
+  if (p) { myPicks.push(p); save(); renderAll(); }
+}
+
+function removePick(n) { myPicks = myPicks.filter(p=>p.n!==n); save(); renderAll(); }
+function clearAll() { if(confirm('Clear all picks?')) { myPicks = []; save(); renderAll(); } }
+
+function switchPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelector(`[data-page="${id}"]`).classList.add('active');
+  if (id==='roster') renderRoster();
+}
+
+function setSort(k) { sortKey = k; renderTable(); }
+
+function renderAll() {
+  document.getElementById('pickCount').textContent = myPicks.length;
+  renderSelect();
+  renderPosFilters();
+  renderTable();
+}
+
+function renderSelect() {
+  const drafted = myPicks.map(p=>p.n);
+  const avail = players.filter(p=>!drafted.includes(p.n)).sort((a,b)=>a.adp-b.adp);
+  document.getElementById('addSel').innerHTML = '<option value="">— select player —</option>' + avail.map(p=>`<option value="${p.n}">${p.n} (${p.pos} · ADP ${p.adp})</option>`).join('');
+}
+
+function renderPosFilters() {
+  document.getElementById('posFilters').innerHTML = POS_FILTERS.map(p=>`<div class="pf${activePos===p?' active':''}" onclick="activePos='${p}';renderAll()">${p}</div>`).join('');
+}
+
+function renderTable() {
+  const search = document.getElementById('searchBox').value.toLowerCase();
+  const hideOff = document.getElementById('hideOff').checked;
+  const sortSel = document.getElementById('sortSel').value;
+  if (['pts','adpDelta','adp'].includes(sortSel)) sortKey = sortSel;
+
+  const drafted = myPicks.map(p=>p.n);
+  const needs = getNeeds();
+  const maxPts = Math.max(...players.map(p=>p.pts));
+
+  let data = players.filter(p => {
+    if (activePos!=='All' && p.pos!==activePos) return false;
+    if (search && !p.n.toLowerCase().includes(search)) return false;
+    if (hideOff && drafted.includes(p.n)) return false;
+    return true;
+  }).map(p => ({...p, adpDelta: p.adp - Math.round(101 - p.pts/28)}));
+
+  data.sort((a,b) => {
+    if (sortKey==='pts') return b.pts-a.pts;
+    if (sortKey==='adpDelta') return b.adpDelta-a.adpDelta;
+    if (sortKey==='adp') return a.adp-b.adp;
+    if (sortKey==='hr') return (b.hr||b.sv||0)-(a.hr||a.sv||0);
+    if (sortKey==='sb') return (b.sb||b.pK||0)-(a.sb||a.pK||0);
+    return b.pts-a.pts;
+  });
+
+  function grade(pts) {
+    const r = pts/maxPts;
+    if (r>.85) return ['g-elite','Elite'];
+    if (r>.68) return ['g-great','Great'];
+    if (r>.50) return ['g-avg','Avg'];
+    return ['g-poor','Weak'];
+  }
+  function barColor(pts) {
+    const r = pts/maxPts;
+    if (r>.85) return '#b794f4';
+    if (r>.68) return '#39d98a';
+    if (r>.50) return '#f0b429';
+    return '#f56565';
+  }
+
+  document.getElementById('tableBody').innerHTML = data.map(p => {
+    const isMine = !!myPicks.find(x=>x.n===p.n);
+    const isDrafted = drafted.includes(p.n) && !isMine;
+    const isNeed = needs.includes(p.pos) && !isMine && !isDrafted;
+    const pct = Math.round((p.pts/maxPts)*100);
+    const [gc, gl] = grade(p.pts);
+    const bc = barColor(p.pts);
+    const delta = Math.round(p.adpDelta);
+    const deltaHtml = delta>8?`<span class="delta-pos">▼${delta}rd value</span>`:delta<-8?`<span class="delta-neg">▲${Math.abs(delta)}rd reach</span>`:`<span class="delta-fair">~fair</span>`;
+    const keyStats = p.pip ? `${p.era} ERA · ${p.pK}K · ${p.sv}SV · ${p.hld}HLD` : `.${Math.round(p.avg*1000)} · ${p.hr}HR · ${p.sb}SB`;
+    const c1 = p.pip ? (p.sv||0) : (p.hr||0);
+    const c2 = p.pip ? (p.pK||0) : (p.sb||0);
+    const rowCls = `${isMine?'is-mine':''}${isDrafted?' is-drafted':''}${isNeed?' is-need':''}`;
+    return `<tr class="${rowCls}">
+      <td class="player-name">${p.n}${isMine?'<span class="tag tag-mine">MY PICK</span>':isDrafted?'<span class="tag tag-drafted">GONE</span>':''}</td>
+      <td><span class="pos-pill pp-${p.pos}">${p.pos}</span></td>
+      <td>
+        <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${bc}"></div></div><span class="pts-num">${p.pts}</span></div>
+        <div class="ppg-sub">${p.ppg}/start</div>
+      </td>
+      <td>${deltaHtml}<div class="adp-sub">ADP ${p.adp}</div></td>
+      <td style="font-size:11px;color:#888;max-width:130px;overflow:hidden;text-overflow:ellipsis">${keyStats}</td>
+      <td style="font-family:'DM Mono',monospace">${c1}</td>
+      <td style="font-family:'DM Mono',monospace">${c2}</td>
+      <td><span class="grade ${gc}">${gl}</span></td>
+      <td>${isNeed?`<span class="need-flag">${p.pos}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // insights
+  const avail = data.filter(p=>!drafted.includes(p.n));
+  const topPts = avail.slice(0,3);
+  const topVal = avail.filter(p=>Math.round(p.adpDelta)>10).slice(0,3);
+  const needPicks = needs.flatMap(pos=>avail.filter(p=>p.pos===pos).slice(0,1)).slice(0,3);
+  document.getElementById('insightBox').innerHTML = `
+    <div class="insight-title">Live intel · ${myPicks.length}/30 picks · ${needs.length} positions open</div>
+    ${topPts.length?`<div class="insight-item">Best available by pts: ${topPts.map(p=>`<strong>${p.n}</strong> (${p.pts})`).join(' · ')}</div>`:''}
+    ${topVal.length?`<div class="insight-item">Best value vs ADP: ${topVal.map(p=>`<strong>${p.n}</strong> +${Math.round(p.adpDelta)}rds`).join(' · ')}</div>`:''}
+    ${needPicks.length?`<div class="insight-item">Fill your needs: ${needPicks.map(p=>`<strong>${p.n}</strong> (${p.pos})`).join(' · ')}</div>`:''}
+  `;
+}
+
+function renderRoster() {
+  const fill = {};
+  const posCount = {};
+  myPicks.forEach(p => {
+    posCount[p.pos] = (posCount[p.pos]||0)+1;
+    fill[p.pos+posCount[p.pos]] = p;
+  });
+
+  document.getElementById('rosterGrid').innerHTML = SLOTS.slice(0,25).map(s => {
+    const p = fill[s.id];
+    return `<div class="slot${p?' filled':''}">
+      <div class="slot-pos">${s.l}</div>
+      ${p?`<div class="slot-name">${p.n}</div><div class="slot-pts">${p.pts}pts · ${p.ppg}/g</div><button class="slot-rm" onclick="removePick('${p.n}')">✕</button>`:`<span class="slot-empty">empty</span>`}
+    </div>`;
+  }).join('');
+
+  const totalPts = myPicks.reduce((a,p)=>a+p.pts,0);
+  const hitters = myPicks.filter(p=>!p.pip);
+  const pitchers = myPicks.filter(p=>p.pip);
+  const totalHR = hitters.reduce((a,p)=>a+(p.hr||0),0);
+  const totalSB = hitters.reduce((a,p)=>a+(p.sb||0),0);
+  const needs = getNeeds();
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Season pts</div><div class="stat-val">${totalPts.toLocaleString()}</div><div class="stat-sub">${myPicks.length} drafted</div></div>
+    <div class="stat-card"><div class="stat-label">HR / SB</div><div class="stat-val">${totalHR}/${totalSB}</div><div class="stat-sub">hitter totals</div></div>
+    <div class="stat-card"><div class="stat-label">SP / RP</div><div class="stat-val">${pitchers.filter(p=>p.pos==='SP').length}/${pitchers.filter(p=>p.pos==='RP').length}</div><div class="stat-sub">pitchers</div></div>
+    <div class="stat-card"><div class="stat-label">Still need</div><div class="stat-val" style="font-size:12px;padding-top:2px">${needs.length?needs.join(' '):' —'}</div><div class="stat-sub">open slots</div></div>
+  `;
+
+  const posOrder = ['C','1B','2B','3B','SS','OF','SP','RP'];
+  const posCount2 = {};
+  myPicks.forEach(p => { posCount2[p.pos]=(posCount2[p.pos]||0)+1; });
+  document.getElementById('posBalance').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${posOrder.map(pos=>{
+    const have = posCount2[pos]||0;
+    const need = NEEDED[pos]||0;
+    const ok = have>=need;
+    return `<div style="background:var(--bg3);border:1px solid ${ok?'rgba(57,217,138,0.2)':'rgba(240,180,41,0.25)'};border-radius:5px;padding:6px 10px;min-width:52px;text-align:center">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:${ok?'#39d98a':'#f0b429'}">${pos}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--text)">${have}/${need}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+load();
+renderAll();
+</script>
+</body>
+</html>
